@@ -1,5 +1,6 @@
 package com.claude.cameo.bridge.handlers;
 
+import com.claude.cameo.bridge.util.CameoApiCompat;
 import com.claude.cameo.bridge.HttpBridgeServer;
 import com.claude.cameo.bridge.util.EdtDispatcher;
 import com.claude.cameo.bridge.util.ElementSerializer;
@@ -415,7 +416,7 @@ public class RelationMapHandler implements HttpHandler {
                     }
                     if (layout != null && applied) {
                         new GraphSettings(diagram).setLayout(layout);
-                        dpe.layout(true);
+                        CameoApiCompat.layout(dpe);
                     }
                     dpe.ensureLoaded();
                     int after = PresentationSerializer.flatten(dpe, null).size();
@@ -482,7 +483,7 @@ public class RelationMapHandler implements HttpHandler {
             if (layout != null) {
                 try {
                     new GraphSettings(diagram).setLayout(layout);
-                    dpe.layout(true);
+                    CameoApiCompat.layout(dpe);
                 } catch (Exception e) {
                     warnings.add("Relation Map layout failed: " + describeException(e));
                 }
@@ -1074,9 +1075,9 @@ public class RelationMapHandler implements HttpHandler {
     private JsonObject relationMapDisplaySummary(DiagramPresentationElement dpe) {
         JsonObject summary = new JsonObject();
         try {
-            summary.addProperty("diagramWindowOpen", dpe.isDiagramWindowOpen());
-            summary.addProperty("diagramWindowActive", dpe.isDiagramWindowActive());
-            if (!dpe.isDiagramWindowOpen()) {
+            summary.addProperty("diagramWindowOpen", CameoApiCompat.isDiagramWindowOpen(dpe));
+            summary.addProperty("diagramWindowActive", CameoApiCompat.isDiagramWindowActive(dpe));
+            if (!CameoApiCompat.isDiagramWindowOpen(dpe)) {
                 summary.addProperty("available", false);
                 summary.addProperty("reason", "Relation Map diagram window is not open");
                 return summary;
@@ -1123,7 +1124,7 @@ public class RelationMapHandler implements HttpHandler {
             return false;
         }
         try {
-            if (!dpe.isDiagramWindowOpen()) {
+            if (!CameoApiCompat.isDiagramWindowOpen(dpe)) {
                 dpe.open();
             }
             Object display = getRelationMapDisplay(dpe);

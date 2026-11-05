@@ -1,5 +1,6 @@
 package com.claude.cameo.bridge.handlers;
 
+import com.claude.cameo.bridge.util.CameoApiCompat;
 import com.claude.cameo.bridge.HttpBridgeServer;
 import com.claude.cameo.bridge.util.CompartmentAliasResolver;
 import com.claude.cameo.bridge.util.EdtDispatcher;
@@ -791,7 +792,7 @@ public class DiagramHandler implements HttpHandler {
             DiagramPresentationElement dpe = findDiagramById(project, diagramId);
             dpe.ensureLoaded();
 
-            boolean success = dpe.layout(true);
+            boolean success = CameoApiCompat.layout(dpe);
 
             JsonObject response = new JsonObject();
             response.addProperty("diagramId", diagramId);
@@ -836,7 +837,7 @@ public class DiagramHandler implements HttpHandler {
                 throw new IllegalArgumentException("Presentation element not found: " + peId);
             }
 
-            PropertyManager pm = target.getPropertyManager();
+            PropertyManager pm = CameoApiCompat.getPropertyManager(target);
             JsonArray propertiesArray = new JsonArray();
             JsonObject propertiesObject = new JsonObject();
             JsonObject compartments = new JsonObject();
@@ -1244,7 +1245,7 @@ public class DiagramHandler implements HttpHandler {
             }
 
             // MUST clone the PropertyManager -- Cameo rejects reuse of the old one
-            PropertyManager pm = target.getPropertyManager().clone();
+            PropertyManager pm = CameoApiCompat.getPropertyManager(target).clone();
             @SuppressWarnings("unchecked")
             List<Property> properties = pm.getProperties();
             JsonArray updated = new JsonArray();
@@ -1328,7 +1329,7 @@ public class DiagramHandler implements HttpHandler {
                 throw new IllegalArgumentException("Presentation element not found: " + peId);
             }
 
-            PropertyManager pm = target.getPropertyManager().clone();
+            PropertyManager pm = CameoApiCompat.getPropertyManager(target).clone();
             @SuppressWarnings("unchecked")
             List<Property> properties = pm.getProperties();
             Map<String, Property> propertyByName = new LinkedHashMap<>();
@@ -2204,7 +2205,7 @@ public class DiagramHandler implements HttpHandler {
             Map<String, PropertySelection> selections,
             boolean resetLabels,
             boolean applyChanges) {
-        PropertyManager pm = target.getPropertyManager().clone();
+        PropertyManager pm = CameoApiCompat.getPropertyManager(target).clone();
         @SuppressWarnings("unchecked")
         List<Property> properties = pm.getProperties();
         JsonArray updated = new JsonArray();
@@ -2491,7 +2492,7 @@ public class DiagramHandler implements HttpHandler {
 
     private boolean targetHasAllocationProperties(PresentationElement pe) {
         try {
-            PropertyManager pm = pe.getPropertyManager();
+            PropertyManager pm = CameoApiCompat.getPropertyManager(pe);
             @SuppressWarnings("unchecked")
             List<Property> properties = pm.getProperties();
             for (Property property : properties) {
@@ -2515,7 +2516,7 @@ public class DiagramHandler implements HttpHandler {
             PresentationElement target,
             Map<String, PropertySelection> selections) {
         try {
-            PropertyManager pm = target.getPropertyManager();
+            PropertyManager pm = CameoApiCompat.getPropertyManager(target);
             @SuppressWarnings("unchecked")
             List<Property> properties = pm.getProperties();
             for (Property property : properties) {

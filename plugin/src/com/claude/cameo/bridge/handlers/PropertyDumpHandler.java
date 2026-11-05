@@ -1,5 +1,6 @@
 package com.claude.cameo.bridge.handlers;
 
+import com.claude.cameo.bridge.util.CameoApiCompat;
 import com.claude.cameo.bridge.HttpBridgeServer;
 import com.claude.cameo.bridge.util.EdtDispatcher;
 import com.claude.cameo.bridge.util.JsonHelper;
@@ -84,7 +85,7 @@ public class PropertyDumpHandler implements HttpHandler {
             Diagram diagram = dpe.getDiagram();
             response.add("diagramProperties", PropertySerializer.serializeValue(diagram, includeRaw, true));
             try {
-                PropertyManager manager = dpe.getPropertyManager();
+                PropertyManager manager = CameoApiCompat.getPropertyManager(dpe);
                 response.add("diagramPresentationProperties",
                         PropertySerializer.serializeManager(manager, includeRaw, summaryOnly));
             } catch (Exception e) {

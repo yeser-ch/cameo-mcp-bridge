@@ -89,7 +89,7 @@ public final class PresentationSerializer {
             boolean summaryOnly) {
         JsonObject json = presentationSummary(pe, parentPresentationId);
         try {
-            PropertyManager manager = pe.getPropertyManager();
+            PropertyManager manager = CameoApiCompat.getPropertyManager(pe);
             json.add("propertyManager", PropertySerializer.serializeManager(manager, includeRaw, summaryOnly));
         } catch (Exception e) {
             JsonArray warnings = new JsonArray();
