@@ -10,8 +10,8 @@ def jdk17Home = project.hasProperty('jdk17Home')
     ? project.property('jdk17Home')
     : (System.getenv('JDK17_HOME') ?: System.getenv('JAVA17_HOME'))
 
-sourceCompatibility = '17'
-targetCompatibility = '17'
+sourceCompatibility = '21'
+targetCompatibility = '21'
 
 sourceSets {
     main {
@@ -27,23 +27,8 @@ sourceSets {
 }
 
 dependencies {
-    compileOnly fileTree(dir: "${cameoHome}/lib", include: ['md.jar'])
-    compileOnly fileTree(dir: "${cameoHome}/lib", include: ['md_api.jar'])
-    compileOnly fileTree(dir: "${cameoHome}/lib", include: ['com.nomagic.magicdraw.uml2-*.jar'])
-    compileOnly fileTree(dir: "${cameoHome}/lib", include: ['com.nomagic.magicdraw.foundation-*.jar'])
-    compileOnly fileTree(dir: "${cameoHome}/lib", include: ['com.nomagic.magicdraw.core.diagram-*.jar'])
-    compileOnly fileTree(dir: "${cameoHome}/lib", include: ['com.nomagic.magicdraw.modeling-*.jar'])
-    compileOnly fileTree(dir: "${cameoHome}/lib", include: ['com.nomagic.utils-*.jar'])
-    compileOnly fileTree(dir: "${cameoHome}/lib", include: ['com.dassault_systemes.modeler.foundation-*.jar'])
-    compileOnly fileTree(dir: "${cameoHome}/lib", include: ['common-*.jar'])
-    compileOnly fileTree(dir: "${cameoHome}/lib", include: ['org.eclipse.emf.ecore-*.jar'])
-    compileOnly fileTree(dir: "${cameoHome}/lib", include: ['org.eclipse.emf.common-*.jar'])
-    compileOnly fileTree(dir: "${cameoHome}/lib", include: ['javax.jmi-*.jar'])
-    compileOnly fileTree(dir: "${cameoHome}/lib", include: ['gson-*.jar'])
-    compileOnly fileTree(dir: "${cameoHome}/lib", include: ['cmof-*.jar'])
-    compileOnly files("${cameoHome}/plugins/com.nomagic.magicdraw.dependencymatrix/dependencymatrix_api.jar")
-    compileOnly files("${cameoHome}/plugins/com.nomagic.magicdraw.diagramtable/diagramtable_api.jar")
-    compileOnly files("${cameoHome}/plugins/com.nomagic.magicdraw.relationshipmap/relationshipmap_api.jar")
+        compileOnly fileTree(dir: "${cameoHome}/lib", include: ['**/*.jar'])
+    compileOnly fileTree(dir: "${cameoHome}/plugins", include: ['**/*.jar'])
 
     testImplementation files("${cameoHome}/lib/junit-4.13.2.jar")
     testImplementation fileTree(dir: "${cameoHome}/lib", include: ['gson-*.jar'])
@@ -56,7 +41,7 @@ tasks.withType(JavaCompile).configureEach {
         options.fork = true
         options.forkOptions.javaHome = file(jdk17Home)
     }
-    options.release = 17
+    options.release = 21
 }
 
 tasks.withType(Test).configureEach {
