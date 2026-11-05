@@ -57,29 +57,60 @@ public final class CameoApiCompat {
         if (legacy != null) {
             return toBoolean(invoke(dpe, legacy, Boolean.TRUE));
         }
+        // 2026x: dpe.getDefaultDiagramLayouter().layout(dpe, new MacroCommand()), then execute the command.
         Object layouter = invokeIfPresent(dpe, "getDefaultDiagramLayouter");
-        if (layouter != null) {
-            for (Method m : dpe.getClass().getMethods()) {
-                if (!m.getName().equals("layout")) {
-                    continue;
-                }
-                Object[] args = buildArgs(m.getParameterTypes(), layouter, dpe);
-                if (args != null) {
-                    return toBoolean(invoke(dpe, m, args));
-                }
-            }
-            for (Method m : layouter.getClass().getMethods()) {
-                if (!m.getName().equals("layout") && !m.getName().equals("apply")) {
-                    continue;
-                }
-                Object[] args = buildArgs(m.getParameterTypes(), layouter, dpe);
-                if (args != null) {
-                    return toBoolean(invoke(layouter, m, args));
-                }
+        if (layouter == null) {
+            throw new UnsupportedOperationException(
+                    "No diagram layout API found on " + dpe.getClass().getName());
+        }
+        Method canLayout = findMethod(layouter.getClass(), "canLayout", 1, dpe);
+        if (canLayout != null && !toBoolean(invoke(layouter, canLayout, dpe))) {
+            return false;
+        }
+        Object command;
+        try {
+            command = Class.forName(MACRO_COMMAND, true, dpe.getClass().getClassLoader())
+                    .getConstructor().newInstance();
+        } catch (ReflectiveOperationException e) {
+            throw new UnsupportedOperationException("Cannot create " + MACRO_COMMAND + ": " + e, e);
+        }
+        Method layoutMethod = null;
+        for (Method m : layouter.getClass().getMethods()) {
+            Class<?>[] p = m.getParameterTypes();
+            if (m.getName().equals("layout") && p.length == 2
+                    && p[0].isInstance(dpe) && p[1].isInstance(command)) {
+                layoutMethod = m;
+                break;
             }
         }
-        throw new UnsupportedOperationException(
-                "No diagram layout API found on " + dpe.getClass().getName());
+        if (layoutMethod == null) {
+            throw new UnsupportedOperationException(
+                    "No layout(diagram, command) method on " + layouter.getClass().getName());
+        }
+        boolean applied = toBoolean(invoke(layouter, layoutMethod, dpe, command));
+        if (!toBoolean(invokeIfPresent(command, "isEmpty"))) {
+            Method execute = findMethod(command.getClass(), "execute");
+            if (execute != null) {
+                invoke(command, execute);
+            } else if ((execute = findMethod(command.getClass(), "execute", boolean.class)) != null) {
+                invoke(command, execute, Boolean.TRUE);
+            } else {
+                throw new UnsupportedOperationException("No execute() method on " + MACRO_COMMAND);
+            }
+        }
+        return applied;
+    }
+
+    private static final String MACRO_COMMAND = "com.dassault_systemes.modeler.foundation.editing.MacroCommand";
+
+    private static Method findMethod(Class<?> type, String name, int paramCount, Object firstArg) {
+        for (Method m : type.getMethods()) {
+            if (m.getName().equals(name) && m.getParameterCount() == paramCount
+                    && m.getParameterTypes()[0].isInstance(firstArg)) {
+                return m;
+            }
+        }
+        return null;
     }
 
     /** Replacement for {@code dpe.isDiagramWindowOpen()}. */
@@ -102,23 +133,6 @@ public final class CameoApiCompat {
         }
         Project project = Application.getInstance().getProject();
         return project != null && invokeIfPresent(project, "getActiveDiagram") == dpe;
-    }
-
-    private static Object[] buildArgs(Class<?>[] types, Object layouter, Object dpe) {
-        Object[] args = new Object[types.length];
-        for (int i = 0; i < types.length; i++) {
-            Class<?> t = types[i];
-            if (t == boolean.class || t == Boolean.class) {
-                args[i] = Boolean.TRUE;
-            } else if (t.isInstance(layouter)) {
-                args[i] = layouter;
-            } else if (t.isInstance(dpe)) {
-                args[i] = dpe;
-            } else {
-                return null;
-            }
-        }
-        return args;
     }
 
     private static Method findMethod(Class<?> type, String name, Class<?>... params) {
